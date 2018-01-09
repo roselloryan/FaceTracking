@@ -53,13 +53,13 @@ class ViewController: UIViewController {
     
     lazy var previewLayer: AVCaptureVideoPreviewLayer? = {
         var previewLay = AVCaptureVideoPreviewLayer(session: self.session!)
-        previewLay?.videoGravity = AVLayerVideoGravityResizeAspectFill
+        previewLay.videoGravity = AVLayerVideoGravity.resizeAspectFill
         
         return previewLay
     }()
     
     lazy var frontCamera: AVCaptureDevice? = {
-        guard let devices = AVCaptureDevice.devices(withMediaType: AVMediaTypeVideo) as? [AVCaptureDevice] else { return nil }
+        guard let devices = AVCaptureDevice.devices(for: AVMediaType.video) as? [AVCaptureDevice] else { return nil }
         
         return devices.filter { $0.position == .front }.first
     }()
@@ -94,7 +94,7 @@ extension ViewController {
        
         guard let session = session, let captureDevice = frontCamera else { return }
         
-        session.sessionPreset = AVCaptureSessionPresetPhoto
+        session.sessionPreset = AVCaptureSession.Preset.photo
         
         do {
             let deviceInput = try AVCaptureDeviceInput(device: captureDevice)
@@ -125,7 +125,7 @@ extension ViewController {
 }
 
 extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
-    func captureOutput(_ captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
+    func captureOutput(_ captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
         let attachments = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, kCMAttachmentMode_ShouldPropagate)
         let ciImage = CIImage(cvImageBuffer: pixelBuffer!, options: attachments as! [String : Any]?)
