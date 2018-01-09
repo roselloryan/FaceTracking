@@ -125,6 +125,7 @@ extension ViewController {
 }
 
 extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
+    
     func captureOutput(_ captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
         let attachments = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, kCMAttachmentMode_ShouldPropagate)
@@ -132,6 +133,7 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
         let options: [String : Any] = [CIDetectorImageOrientation: exifOrientation(orientation: UIDevice.current.orientation),
                                        CIDetectorSmile: true,
                                        CIDetectorEyeBlink: true]
+       
         let allFeatures = faceDetector?.features(in: ciImage, options: options)
     
         let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer)
@@ -143,8 +145,8 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
             if let faceFeature = feature as? CIFaceFeature {
                 let faceRect = calculateFaceRect(facePosition: faceFeature.mouthPosition, faceBounds: faceFeature.bounds, clearAperture: cleanAperture)
                 let featureDetails = ["has smile: \(faceFeature.hasSmile)",
-                    "has closed left eye: \(faceFeature.leftEyeClosed)",
-                    "has closed right eye: \(faceFeature.rightEyeClosed)"]
+                    "has closed right eye: \(faceFeature.leftEyeClosed)",
+                    "has closed left eye: \(faceFeature.rightEyeClosed)"]
                 
                 update(with: faceRect, text: featureDetails.joined(separator: "\n"))
             }
