@@ -59,7 +59,7 @@ class ViewController: UIViewController {
     }()
     
     lazy var frontCamera: AVCaptureDevice? = {
-        guard let devices = AVCaptureDevice.devices(for: AVMediaType.video) as? [AVCaptureDevice] else { return nil }
+        let devices = AVCaptureDevice.devices(for: AVMediaType.video)
         
         return devices.filter { $0.position == .front }.first
     }()
