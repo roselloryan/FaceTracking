@@ -41,7 +41,7 @@ class DetailsView: UIView {
 class ViewController: UIViewController {
 
     var session: AVCaptureSession?
-    var stillOutput = AVCaptureStillImageOutput()
+    var stillOutput = AVCapturePhotoOutput()
     var borderLayer: CAShapeLayer?
    
     let detailsView: DetailsView = {
@@ -60,9 +60,10 @@ class ViewController: UIViewController {
     }()
     
     lazy var frontCamera: AVCaptureDevice? = {
-        let devices = AVCaptureDevice.devices(for: AVMediaType.video)
         
-        return devices.filter { $0.position == .front }.first
+        let discoverySession = AVCaptureDevice.DiscoverySession.init(deviceTypes: [AVCaptureDevice.DeviceType.builtInWideAngleCamera], mediaType: .video, position: AVCaptureDevice.Position.front)
+
+        return discoverySession.devices.count > 0 ? discoverySession.devices.first : nil
     }()
     
     let faceDetector = CIDetector(ofType: CIDetectorTypeFace, context: nil, options: [CIDetectorAccuracy : CIDetectorAccuracyLow])
@@ -238,6 +239,8 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 
 extension ViewController {
     func update(with faceRect: CGRect, text: String) {
+        
+        print("we are updating")
         
         DispatchQueue.main.async {
             UIView.animate(withDuration: 0.2) { [unowned self] in
