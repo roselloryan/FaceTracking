@@ -39,10 +39,6 @@ class DetailsView: UIView {
 
 
 class ViewController: UIViewController {
-    
-    var lastOrientation = UIDeviceOrientation.portrait
-    
-    var blinkCount = 0
 
     var session: AVCaptureSession?
     var stillOutput = AVCaptureStillImageOutput()
@@ -160,11 +156,6 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
                     "has closed left eye: \(faceFeature.rightEyeClosed)"]
         
                 update(with: faceRect, text: featureDetails.joined(separator: "\n"))
-                
-                if faceFeature.rightEyeClosed && faceFeature.leftEyeClosed {
-                    blinkCount += 1
-                    print("Blinked! \(blinkCount)")
-                }
             }
         }
         
