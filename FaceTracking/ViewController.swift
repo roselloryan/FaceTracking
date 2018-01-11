@@ -146,7 +146,7 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
         
         let ciImage = CIImage(cvImageBuffer: pixelBuffer!, options: attachments as! [String : Any]?)
         
-        let options: [String : Any] = [CIDetectorImageOrientation: exifOrientation(orientation: UIDevice.current.orientation),
+        let options: [String : Any] = [CIDetectorImageOrientation: 6,
                                        CIDetectorSmile: true,
                                        CIDetectorEyeBlink: true]
         
@@ -167,16 +167,18 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
                     "has closed left eye: \(faceFeature.rightEyeClosed)"]
             
                 
+                // blink check
                 if faceFeature.leftEyeClosed && faceFeature.rightEyeClosed && !isInMidBlink {
-                    // We have a blink
+                    // Start of blink
                     blinkCount += 1
                     print("We have another blink! \(blinkCount)")
                     isInMidBlink = true
                 }
                 else if faceFeature.leftEyeClosed && faceFeature.rightEyeClosed && isInMidBlink {
-                    // do nothing
+                    // Mid blink, do nothing
                 }
                 else {
+                    // Blink ended reset
                     isInMidBlink = false
                 }
         
