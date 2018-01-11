@@ -39,6 +39,11 @@ class DetailsView: UIView {
 
 
 class ViewController: UIViewController {
+    
+    var blinkCount = 0
+    var isInMidBlink = false
+    
+    var parentFrame: CGRect!
 
     var session: AVCaptureSession?
     var stillOutput = AVCapturePhotoOutput()
@@ -56,7 +61,8 @@ class ViewController: UIViewController {
         var previewLay = AVCaptureVideoPreviewLayer(session: self.session!)
         previewLay.videoGravity = AVLayerVideoGravity.resizeAspectFill
         
-        return previewLay
+//        return previewLay
+        return nil
     }()
     
     lazy var frontCamera: AVCaptureDevice? = {
@@ -67,25 +73,29 @@ class ViewController: UIViewController {
     }()
     
     let faceDetector = CIDetector(ofType: CIDetectorTypeFace, context: nil, options: [CIDetectorAccuracy : CIDetectorAccuracyLow])
+
     
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        previewLayer?.frame = view.frame
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        guard let previewLayer = previewLayer else { return }
-        
-        view.layer.addSublayer(previewLayer)
-        view.addSubview(detailsView)
-        view.bringSubview(toFront: detailsView)
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         sessionPrepare()
         session?.startRunning()
+        
+        parentFrame = self.view.frame
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+//        guard let previewLayer = previewLayer else { return }
+        
+//        view.layer.addSublayer(previewLayer)
+        view.addSubview(detailsView)
+        view.bringSubview(toFront: detailsView)
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        previewLayer?.frame = view.frame
     }
 }
 
@@ -155,6 +165,20 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
                 let featureDetails = ["has smile: \(faceFeature.hasSmile)",
                     "has closed right eye: \(faceFeature.leftEyeClosed)",
                     "has closed left eye: \(faceFeature.rightEyeClosed)"]
+            
+                
+                if faceFeature.leftEyeClosed && faceFeature.rightEyeClosed && !isInMidBlink {
+                    // We have a blink
+                    blinkCount += 1
+                    print("We have another blink! \(blinkCount)")
+                    isInMidBlink = true
+                }
+                else if faceFeature.leftEyeClosed && faceFeature.rightEyeClosed && isInMidBlink {
+                    // do nothing
+                }
+                else {
+                    isInMidBlink = false
+                }
         
                 update(with: faceRect, text: featureDetails.joined(separator: "\n"))
             }
@@ -214,7 +238,8 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
 
     func calculateFaceRect(facePosition: CGPoint, faceBounds: CGRect, clearAperture: CGRect) -> CGRect {
-        let parentFrameSize = previewLayer!.frame.size
+//        let parentFrameSize = previewLayer!.frame.size
+        let parentFrameSize = parentFrame.size
         let previewBox = videoBox(frameSize: parentFrameSize, apertureSize: clearAperture.size)
         
         var faceRect = faceBounds
@@ -240,38 +265,13 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 extension ViewController {
     func update(with faceRect: CGRect, text: String) {
         
-        print("we are updating")
-        
         DispatchQueue.main.async {
             UIView.animate(withDuration: 0.2) { [unowned self] in
                 self.detailsView.detailsLabel.text = text
                 self.detailsView.alpha = 1.0
                 self.detailsView.frame = faceRect
-                
-                self.rotateDetailViewWithDeviceOrientation()
             }
         }
     }
-    
-    func rotateDetailViewWithDeviceOrientation() {
-        switch UIDevice.current.orientation {
-            
-        case .portrait:
-            self.detailsView.transform = CGAffineTransform(rotationAngle: 0)
-            
-        case .landscapeLeft:
-            self.detailsView.transform = CGAffineTransform(rotationAngle: CGFloat.pi / 2)
-            
-        case .landscapeRight:
-            self.detailsView.transform = CGAffineTransform(rotationAngle: -CGFloat.pi / 2)
-            
-        case .portraitUpsideDown:
-            self.detailsView.transform = CGAffineTransform(rotationAngle: CGFloat.pi)
-            
-        default:
-            // Nothing to do for the rest
-            print("default")
-        }
-        
-    }
+
 }
