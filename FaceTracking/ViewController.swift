@@ -1,4 +1,4 @@
- //
+//
 //  ViewController.swift
 //  AutoCamera
 //
@@ -61,9 +61,9 @@ class ViewController: UIViewController {
     
     lazy var frontCamera: AVCaptureDevice? = {
         
-        let discoverySession = AVCaptureDevice.DiscoverySession.init(deviceTypes: [AVCaptureDevice.DeviceType.builtInWideAngleCamera], mediaType: .video, position: AVCaptureDevice.Position.front)
+        let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [AVCaptureDevice.DeviceType.builtInWideAngleCamera], mediaType: .video, position: AVCaptureDevice.Position.front)
         
-        return discoverySession.devices.count > 0 ? discoverySession.devices.first : nil
+        return discoverySession.devices.first
     }()
     
     let faceDetector = CIDetector(ofType: CIDetectorTypeFace, context: nil, options: [CIDetectorAccuracy : CIDetectorAccuracyLow])
@@ -130,11 +130,11 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
     
     func captureOutput(_ captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         
-        let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         
-        let attachments = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, kCMAttachmentMode_ShouldPropagate)
+        guard let attachments = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, kCMAttachmentMode_ShouldPropagate) else { return }
         
-        let ciImage = CIImage(cvImageBuffer: pixelBuffer!, options: attachments as! [String : Any]?)
+        let ciImage = CIImage(cvImageBuffer: pixelBuffer, options: (attachments as! [String : Any]))
         
         let options: [String : Any] = [CIDetectorImageOrientation: exifOrientation(orientation: UIDevice.current.orientation),
                                        CIDetectorSmile: true,
@@ -153,8 +153,8 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
                 
                 let faceRect = calculateFaceRect(facePosition: faceFeature.mouthPosition, faceBounds: faceFeature.bounds, clearAperture: cleanAperture)
                 let featureDetails = ["has smile: \(faceFeature.hasSmile)",
-                    "has closed right eye: \(faceFeature.leftEyeClosed)",
-                    "has closed left eye: \(faceFeature.rightEyeClosed)"]
+                    "has closed right eye: \(faceFeature.rightEyeClosed)",
+                    "has closed left eye: \(faceFeature.leftEyeClosed)"]
         
                 update(with: faceRect, text: featureDetails.joined(separator: "\n"))
             }
@@ -169,7 +169,6 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
     
     func exifOrientation(orientation: UIDeviceOrientation) -> Int {
-        
         switch orientation {
         case .portraitUpsideDown:
             return 8
@@ -241,7 +240,7 @@ extension ViewController {
     func update(with faceRect: CGRect, text: String) {
         
         DispatchQueue.main.async {
-            UIView.animate(withDuration: 0.2) { [unowned self] in
+            UIView.animate(withDuration: 0.2) {
                 self.detailsView.detailsLabel.text = text
                 self.detailsView.alpha = 1.0
                 self.detailsView.frame = faceRect
@@ -253,23 +252,15 @@ extension ViewController {
     
     func rotateDetailViewWithDeviceOrientation() {
         switch UIDevice.current.orientation {
-            
         case .portrait:
-            self.detailsView.transform = CGAffineTransform(rotationAngle: 0)
-            
+            detailsView.transform = CGAffineTransform(rotationAngle: 0)
         case .landscapeLeft:
-            self.detailsView.transform = CGAffineTransform(rotationAngle: CGFloat.pi / 2)
-            
+            detailsView.transform = CGAffineTransform(rotationAngle: CGFloat.pi / 2)
         case .landscapeRight:
-            self.detailsView.transform = CGAffineTransform(rotationAngle: -CGFloat.pi / 2)
-            
+            detailsView.transform = CGAffineTransform(rotationAngle: -CGFloat.pi / 2)
         case .portraitUpsideDown:
-            self.detailsView.transform = CGAffineTransform(rotationAngle: CGFloat.pi)
-            
-        default:
-            // Nothing to do for the rest
-            print("default")
+            detailsView.transform = CGAffineTransform(rotationAngle: CGFloat.pi)
+        default: ()
         }
-        
     }
 }
