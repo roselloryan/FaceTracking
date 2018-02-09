@@ -234,7 +234,6 @@ extension ViewController {
                 self.detailsView.detailsLabel.text = text
                 self.detailsView.alpha = 1.0
                 self.detailsView.frame = faceRect
-                self.rotateDetailViewWithDeviceOrientation()
             }
         }
     }
