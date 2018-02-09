@@ -237,18 +237,4 @@ extension ViewController {
             }
         }
     }
-    
-    func rotateDetailViewWithDeviceOrientation() {
-        switch UIDevice.current.orientation {
-        case .portrait:
-            detailsView.transform = CGAffineTransform(rotationAngle: 0)
-        case .landscapeLeft:
-            detailsView.transform = CGAffineTransform(rotationAngle: CGFloat.pi / 2)
-        case .landscapeRight:
-            detailsView.transform = CGAffineTransform(rotationAngle: -CGFloat.pi / 2)
-        case .portraitUpsideDown:
-            detailsView.transform = CGAffineTransform(rotationAngle: CGFloat.pi)
-        default: ()
-        }
-    }
 }
